@@ -1,5 +1,5 @@
 $ProjectDirectory = Split-Path -Path $PSScriptRoot -Parent
-$PathToModule = Join-Path -Path $ProjectDirectory -ChildPath 'src\Poshotel.psm1'
+$PathToModule = Join-Path -Path $ProjectDirectory -ChildPath 'src\PoshOtel.psm1'
 
 . "$PSScriptRoot\secrets.ps1"
 
