@@ -14,7 +14,7 @@ Here's a very basic trace in Honeycomb:
 
 ## Usage
 
-```
+```powershell
 Import-Module .\path\to\PoshOtel.psm1
 
 # These need to be set prior to calling the Initialize cmdlet
