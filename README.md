@@ -23,16 +23,16 @@ Import-Module .\path\to\PoshOtel.psm1
     $env:OTEL_EXPORTER_OTLP_TIMEOUT = '600000'
     $env:OTEL_EXPORTER_OTLP_PROTOCOL = 'grpc'
     
-Initialize-PoshOtel
 
+Initialize-PoshOtel -ServiceName 'TestConsumer' -ServiceVersion '0.0.1'
 
-    $traceOperation = New-OtelTraceSpan -ServiceName 'TestConsumer' -ActivityName 'Hello, World!' -RootSpan
-    $null = $traceOperation.SetTag('user', $env:USERNAME)
-    $null = $traceOperation.SetTag('operation-description', $OperationDescription)
+$traceOperation = New-OtelTraceSpan -ServiceName 'TestConsumer' -ActivityName 'Hello, World!' -RootSpan
+$null = $traceOperation.SetTag('user', $env:USERNAME)
+$null = $traceOperation.SetTag('operation-description', $OperationDescription)
 
-    Start-Sleep -Seconds 1
+Start-Sleep -Seconds 1
 
-    $null = $traceOperation.Stop()
-    $traceOperation.Dispose()
+$null = $traceOperation.Stop()
+$traceOperation.Dispose()
 
 ```
