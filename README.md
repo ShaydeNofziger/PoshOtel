@@ -4,7 +4,7 @@ An Open Telemetry Client for use in PowerShell scripts
 
 This is very experimental. Lots of work-in-progress and missing tests / more robust methods before this is ready for prime time.
 
-Currently, this will output syncronous events to an OTLP endpoint configured as below. I have only tested with this Honeycomb so far.
+Currently, this will output synchronous events to an OTLP endpoint configured as below. I have only tested with this Honeycomb so far.
 
 test/TestConsumer.ps1 has proof-of-concept examples while functionality is being built.
 
