@@ -26,9 +26,9 @@ Import-Module .\path\to\PoshOtel.psm1
 
 Initialize-PoshOtel -ServiceName 'TestConsumer' -ServiceVersion '0.0.1'
 
-$traceOperation = New-OtelTraceSpan -ServiceName 'TestConsumer' -ActivityName 'Hello, World!' -RootSpan
+$traceOperation = New-OtelTraceSpan -ServiceName 'TestConsumer' -ActivityName 'hello-world' -RootSpan
 $null = $traceOperation.SetTag('user', $env:USERNAME)
-$null = $traceOperation.SetTag('operation-description', $OperationDescription)
+$null = $traceOperation.SetTag('operation-description', 'Hello, World!')
 
 Start-Sleep -Seconds 1
 
