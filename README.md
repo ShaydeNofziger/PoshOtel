@@ -13,6 +13,8 @@ Here's a very basic trace in Honeycomb:
 
 ## Environment Variables
 
+Set these prior to calling `Initialize-PoshOtel`. TestConsumer.ps1 dot-sources a `secrets.ps1` file for this reason.
+
 ```powershell
     $env:OTEL_EXPORTER_OTLP_ENDPOINT = 'https://api.honeycomb.io:443'
     $env:OTEL_EXPORTER_OTLP_HEADERS = 'x-honeycomb-team=<<API_KEY>>,x-honeycomb-dataset=<<DATASET>>'
