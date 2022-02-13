@@ -58,13 +58,12 @@ $NewModuleManifestSplat = @{
     CompanyName = 'PoshOtel'
     ProjectUri = 'https://github.com/ShaydeNofziger/PoshOtel'
     LicenseUri = 'https://github.com/ShaydeNofziger/PoshOtel/blob/main/LICENSE'
-    Tags = @('PSEdition_Desktop')
+    Tags = @('PSEdition_Desktop', 'PSEdition_Core', 'Windows')
     CmdletsToExport = @()
     VariablesToExport = @()
     AliasesToExport = @()
     FileList = $RequiredFiles
-    PowerShellVersion = '5.1'
-    CompatiblePSEditions = @('Desktop')
+    CompatiblePSEditions = @('Desktop', 'Core')
 }
 
 Write-Verbose -Message 'Creating module manifest...'
