@@ -36,6 +36,7 @@ function InternalInitializeOtlpTracerProvider {
     $tracerProviderBuilder = [OtlpTraceExporterHelperExtensions]::AddOtlpExporter($tracerProviderBuilder)
 
     # TODO: Add check to ensure we don't register this more than once. ReadOnly variable??
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseDeclaredVarsMoreThanAssignments', '')]
     $Global:PoshOtelTracerProvider = [TracerProviderBuilderExtensions]::Build($tracerProviderBuilder)
 }
 
