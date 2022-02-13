@@ -12,7 +12,7 @@ function Get-OtelActivitySource {
         [string] $ServiceName
     )
 
-    return [ActivitySource]::new($ServiceName)
+    return [System.Diagnostics.ActivitySource]::new($ServiceName)
 }
 
 function New-OtelTraceSpan {
@@ -23,7 +23,7 @@ function New-OtelTraceSpan {
         [Parameter(Mandatory = $true)]
         [string] $ActivityName,
         [Parameter()]
-        [ActivityKind] $ActivityKind = [ActivityKind]::Server,
+        [System.Diagnostics.ActivityKind] $ActivityKind = [System.Diagnostics.ActivityKind]::Server,
         [Parameter()]
         [switch]$RootSpan
     )
@@ -38,7 +38,4 @@ function New-OtelTraceSpan {
     return $activity
 }
 
-Export-ModuleMember -Function @(
-    'Get-OtelActivitySource',
-    'New-OtelTraceSpan'
-)
+Export-ModuleMember -Function New-OtelTraceSpan, Get-OtelActivitySource
