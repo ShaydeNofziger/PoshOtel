@@ -5,9 +5,10 @@ param(
 
 $ErrorActionPreference = 'Stop'
 
-$ProjectRootPath = Split-Path -Path $PSScriptRoot -Parent
-$BuildDirectoryPath = Join-Path -Path $ProjectRootPath -ChildPath 'build'
-$SrcDirectoryPath = Join-Path -Path $ProjectRootPath -ChildPath 'src'
+$ProjectRootPath = Split-Path -Path $PSScriptRoot -Parent -Resolve
+$BuildDirectoryPath = Join-Path -Path $ProjectRootPath -ChildPath 'build' -Resolve
+$SrcDirectoryPath = Join-Path -Path $ProjectRootPath -ChildPath 'src' -Resolve
+$ToolsDirectoryPath = Join-Path $ProjectRootPath -ChildPath 'tools' -Resolve
 $BinDirectoryPath = Join-Path -Path $ProjectRootPath -ChildPath 'bin'
 
 $MODULE_GUID = [Guid]::new('2CA13CCF-8751-4D25-9CBF-998727787367')
@@ -20,19 +21,25 @@ if (Test-Path "$BuildDirectoryPath\secrets.ps1") {
 Remove-Item -Path $BinDirectoryPath -Recurse -Force
 
 Write-Verbose -Message 'Installing required dependencies...'
-. $ProjectRootPath\tools\install.ps1
+. $ToolsDirectoryPath\install.ps1
 
 Write-Verbose -Message 'Copying src files to bin directory...'
 Copy-Item -Path "$SrcDirectoryPath\*.ps1", "$SrcDirectoryPath\*.psm1" -Destination $BinDirectoryPath -Force
 
-$RequiredFilesList = Get-ChildItem -Path $BinDirectoryPath -Recurse -File
-
+# All files under the bin directory are packaged here, currently. Anything in bin is considered part of the module.
+# Any operations to clean-up and add to the file list should be done prior to this step.
+# TODO: How to include only the exact dlls and resource files we need? dll's and runtime directory?
 $RequiredFiles = @()
-$relativePathSubstringIndex = $BinDirectoryPath.Length + 1 # the length of the path + 1 for the slash
+$RequiredFilesList = Get-ChildItem -Path $BinDirectoryPath -Recurse -File
 foreach($RequiredFile in $RequiredFilesList) {
-    $RequiredFiles += $RequiredFile.FullName.Substring($relativePathSubstringIndex)
+    $RequiredFiles += $RequiredFile.FullName.Substring(
+        # relative pathing from the root of the module
+        # the length of the path to the root + 1 for the slash
+        $BinDirectoryPath.Length + 1
+    )
 }
 
+# This grabs all of the DLLs in the bin directory that target netstandard2.0 for load at module-import time.
 $RequiredAssemblyFileList = $RequiredFilesList | Where-Object -Property FullName -Like '*\lib\netstandard2.0\*' |  Where-Object -Property Extension -eq '.dll' | Select-Object -Property Name, FullName, BaseName
 $RequiredAssemblies = @()
 foreach ($RequiredAssemblyFile in $RequiredAssemblyFileList) {
