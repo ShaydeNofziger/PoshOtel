@@ -8,9 +8,6 @@ using namespace OpenTelemetry.Exporter.OpenTelemetryProtocol
 # TODO: Is Global scope necessary to maintain the instance and not let it be disposed?
 $Global:PoshOtelTracerProvider = $null
 
-$ProjectRoot = Split-Path -Path $PSScriptRoot -Parent
-$BinDirectory = Join-Path -Path $ProjectRoot -ChildPath 'bin'
-
 function InternalInitializeOtlpTracerProvider {
     [CmdletBinding()]
     param(
@@ -21,10 +18,11 @@ function InternalInitializeOtlpTracerProvider {
     )
 
     <#
-            internal const string EndpointEnvVarName = "OTEL_EXPORTER_OTLP_ENDPOINT";
-            internal const string HeadersEnvVarName = "OTEL_EXPORTER_OTLP_HEADERS";
-            internal const string TimeoutEnvVarName = "OTEL_EXPORTER_OTLP_TIMEOUT";
-            internal const string ProtocolEnvVarName = "OTEL_EXPORTER_OTLP_PROTOCOL";
+        Per the OTLP .NET documentation, these values can be configured via environment variables.
+            EndpointEnvVarName = "OTEL_EXPORTER_OTLP_ENDPOINT"
+            HeadersEnvVarName = "OTEL_EXPORTER_OTLP_HEADERS"
+            TimeoutEnvVarName = "OTEL_EXPORTER_OTLP_TIMEOUT"
+            ProtocolEnvVarName = "OTEL_EXPORTER_OTLP_PROTOCOL"
     #>
 
     $resourceBuilder = [OpenTelemetry.Resources.ResourceBuilder]::CreateDefault()
@@ -41,27 +39,6 @@ function InternalInitializeOtlpTracerProvider {
     $Global:PoshOtelTracerProvider = [TracerProviderBuilderExtensions]::Build($tracerProviderBuilder)
 }
 
-function InternalRegisterTypes {
-    [CmdletBinding()]
-    param()
-
-    # TODO: Make versioning easier
-    # Note: These are in a specific order to ensure inner dependencies are loaded before their consuming dependencies.
-    [string[]]$TypesToAdd = @(
-        "$BinDirectory\OpenTelemetry.Api.1.2.0-rc2\lib\netstandard2.0\OpenTelemetry.Api.dll",
-        "$BinDirectory\OpenTelemetry.1.2.0-rc2\lib\netstandard2.0\OpenTelemetry.dll",
-        "$BinDirectory\Google.Protobuf.3.15.5\lib\netstandard2.0\Google.Protobuf.dll",
-        "$BinDirectory\Grpc.Core.Api.2.43.0\lib\netstandard2.0\Grpc.Core.Api.dll",
-        "$BinDirectory\Grpc.Core.2.43.0\lib\netstandard2.0\Grpc.Core.dll",
-        "$BinDirectory\OpenTelemetry.Exporter.Console.1.2.0-rc2\lib\netstandard2.0\OpenTelemetry.Exporter.Console.dll",
-        "$BinDirectory\OpenTelemetry.Exporter.OpenTelemetryProtocol.1.2.0-rc2\lib\netstandard2.0\OpenTelemetry.Exporter.OpenTelemetryProtocol.dll"
-    )
-
-    foreach ($PathToType in $TypesToAdd) {
-        Add-Type -Path $PathToType
-    }
-}
-
 function Initialize-PoshOtel {
     [CmdletBinding()]
     param(
@@ -74,8 +51,4 @@ function Initialize-PoshOtel {
     InternalInitializeOtlpTracerProvider -ServiceName $ServiceName -ServiceVersion $ServiceVersion
 }
 
-InternalRegisterTypes
-
-Export-ModuleMember -Function @(
-    'Initialize-PoshOtel'
-)
+Export-ModuleMember -Function Initialize-PoshOtel
