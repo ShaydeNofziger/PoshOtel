@@ -3,25 +3,61 @@ param(
     [string]$Version = '0.0.1'
 )
 
+$ErrorActionPreference = 'Stop'
+
+$MODULE_GUID = [Guid]::new('2CA13CCF-8751-4D25-9CBF-998727787367')
+
 if (Test-Path "$PSScriptRoot\secrets.ps1") {
     Write-Verbose 'secrets.ps1 file found. Loading secrets...'
     . $PSScriptRoot\secrets.ps1
 }
 
+Remove-Item -Path "$PSScriptRoot\bin" -Recurse -Force
+
 Write-Verbose -Message 'Installing required dependencies...'
 . $PSScriptRoot\tools\install.ps1
 
-Copy-Item -Path "$PSScriptRoot\src\*.ps1", "$PSScriptRoot\src\*.psm1" -Destination "$PSScriptRoot\bin" -Force -Verbose
+Write-Verbose -Message 'Copying src files to bin directory...'
+Copy-Item -Path "$PSScriptRoot\src\*.ps1", "$PSScriptRoot\src\*.psm1" -Destination "$PSScriptRoot\bin" -Force
 
-New-ModuleManifest -Path $PSScriptRoot\bin\PoshOtel.psd1 -RequiredAssemblies(
-    # TODO: How to support multiple versions of the same assembly for consumers?
-    'Google.Protobuf.3.15.5\lib\netstandard2.0\Google.Protobuf.dll',
-    'Grpc.Core.2.43.0\lib\netstandard2.0\Grpc.Core.dll',
-    'Grpc.Core.Api.2.43.0\lib\netstandard2.0\Grpc.Core.Api.dll',
-    'OpenTelemetry.1.2.0-rc2\lib\netstandard2.0\OpenTelemetry.dll',
-    'OpenTelemetry.Api.1.2.0-rc2\lib\netstandard2.0\OpenTelemetry.Api.dll',
-    'OpenTelemetry.Exporter.Console.1.2.0-rc2\lib\netstandard2.0\OpenTelemetry.Exporter.Console.dll',
-    'OpenTelemetry.Exporter.OpenTelemetryProtocol.1.2.0-rc2\lib\netstandard2.0\OpenTelemetry.Exporter.OpenTelemetryProtocol.dll'
-) -RootModule 'PoshOtel.psm1' -Author 'Shayde Nofziger' -ModuleVersion $Version -Description 'An Open Telemetry Client for use in PowerShell scripts' -Guid ([Guid]::new('2CA13CCF-8751-4D25-9CBF-998727787367')) -CompanyName 'PoshOtel' -Verbose
+$RequiredFilesList = Get-ChildItem -Path .\bin -Recurse -File
+
+$RequiredFiles = @()
+$relativePathSubstringIndex = $PSScriptRoot.Length + '\bin\'.Length
+foreach($RequiredFile in $RequiredFilesList) {
+    $RequiredFiles += $RequiredFile.FullName.Substring($relativePathSubstringIndex)
+}
+
+$RequiredAssemblyFileList = $RequiredFilesList | Where-Object -Property FullName -Like '*\lib\netstandard2.0\*' |  Where-Object -Property Extension -eq '.dll' | Select-Object -Property Name, FullName, BaseName
+$RequiredAssemblies = @()
+foreach ($RequiredAssemblyFile in $RequiredAssemblyFileList) {
+    $RequiredAssemblies += "packages\$($RequiredAssemblyFile.BaseName)\lib\netstandard2.0\$($RequiredAssemblyFile.Name)"
+}
+
+
+$NewModuleManifestSplat = @{
+    Path = "$PSScriptRoot\bin\PoshOtel.psd1"
+    RequiredAssemblies = $RequiredAssemblies
+    RootModule = 'PoshOtel.psm1'
+    Author = 'Shayde Nofziger'
+    ModuleVersion = $Version
+    Description = 'An Open Telemetry Client for use in PowerShell scripts'
+    Guid = $MODULE_GUID
+    CompanyName = 'PoshOtel'
+    ProjectUri = 'https://github.com/ShaydeNofziger/PoshOtel'
+    Tags = @('PSEdition_Desktop')
+    CmdletsToExport = @()
+    VariablesToExport = @()
+    AliasesToExport = @()
+    FileList = $RequiredFiles
+    PowerShellVersion = '5.1'
+    CompatiblePSEditions = @('Desktop')
+}
+
+Write-Verbose -Message 'Creating module manifest...'
+Write-Verbose -Message ($NewModuleManifestSplat | ConvertTo-Json)
+New-ModuleManifest @NewModuleManifestSplat
+
+Test-ModuleManifest -Path $NewModuleManifestSplat.Path
 
 # TODO: Pester tests
