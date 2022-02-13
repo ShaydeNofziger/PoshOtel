@@ -15,7 +15,10 @@ Here's a very basic trace in Honeycomb:
 ## Usage
 
 ```powershell
-Import-Module .\path\to\PoshOtel.psm1
+# Install dependencies and build the module, creating the manifest definition file
+./build/build.ps1
+
+Import-Module .\bin\PoshOtel.psd1
 
 # These need to be set prior to calling the Initialize cmdlet
     $env:OTEL_EXPORTER_OTLP_ENDPOINT = 'https://api.honeycomb.io:443'

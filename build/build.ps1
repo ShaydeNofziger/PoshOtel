@@ -5,25 +5,30 @@ param(
 
 $ErrorActionPreference = 'Stop'
 
+$ProjectRootPath = Split-Path -Path $PSScriptRoot -Parent
+$BuildDirectoryPath = Join-Path -Path $ProjectRootPath -ChildPath 'build'
+$SrcDirectoryPath = Join-Path -Path $ProjectRootPath -ChildPath 'src'
+$BinDirectoryPath = Join-Path -Path $ProjectRootPath -ChildPath 'bin'
+
 $MODULE_GUID = [Guid]::new('2CA13CCF-8751-4D25-9CBF-998727787367')
 
-if (Test-Path "$PSScriptRoot\secrets.ps1") {
+if (Test-Path "$BuildDirectoryPath\secrets.ps1") {
     Write-Verbose 'secrets.ps1 file found. Loading secrets...'
-    . $PSScriptRoot\secrets.ps1
+    . $BuildDirectoryPath\secrets.ps1
 }
 
-Remove-Item -Path "$PSScriptRoot\bin" -Recurse -Force
+Remove-Item -Path $BinDirectoryPath -Recurse -Force
 
 Write-Verbose -Message 'Installing required dependencies...'
-. $PSScriptRoot\tools\install.ps1
+. $ProjectRootPath\tools\install.ps1
 
 Write-Verbose -Message 'Copying src files to bin directory...'
-Copy-Item -Path "$PSScriptRoot\src\*.ps1", "$PSScriptRoot\src\*.psm1" -Destination "$PSScriptRoot\bin" -Force
+Copy-Item -Path "$SrcDirectoryPath\*.ps1", "$SrcDirectoryPath\*.psm1" -Destination $BinDirectoryPath -Force
 
-$RequiredFilesList = Get-ChildItem -Path .\bin -Recurse -File
+$RequiredFilesList = Get-ChildItem -Path $BinDirectoryPath -Recurse -File
 
 $RequiredFiles = @()
-$relativePathSubstringIndex = $PSScriptRoot.Length + '\bin\'.Length
+$relativePathSubstringIndex = $BinDirectoryPath.Length + 1 # the length of the path + 1 for the slash
 foreach($RequiredFile in $RequiredFilesList) {
     $RequiredFiles += $RequiredFile.FullName.Substring($relativePathSubstringIndex)
 }
@@ -36,7 +41,7 @@ foreach ($RequiredAssemblyFile in $RequiredAssemblyFileList) {
 
 
 $NewModuleManifestSplat = @{
-    Path = "$PSScriptRoot\bin\PoshOtel.psd1"
+    Path = "$BinDirectoryPath\PoshOtel.psd1"
     RequiredAssemblies = $RequiredAssemblies
     RootModule = 'PoshOtel.psm1'
     Author = 'Shayde Nofziger'
