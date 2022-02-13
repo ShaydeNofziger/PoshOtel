@@ -50,6 +50,7 @@ $NewModuleManifestSplat = @{
     Guid = $MODULE_GUID
     CompanyName = 'PoshOtel'
     ProjectUri = 'https://github.com/ShaydeNofziger/PoshOtel'
+    LicenseUri = 'https://github.com/ShaydeNofziger/PoshOtel/blob/main/LICENSE'
     Tags = @('PSEdition_Desktop')
     CmdletsToExport = @()
     VariablesToExport = @()
