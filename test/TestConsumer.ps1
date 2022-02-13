@@ -1,10 +1,10 @@
 $ProjectDirectory = Split-Path -Path $PSScriptRoot -Parent
-$PathToModule = Join-Path -Path $ProjectDirectory -ChildPath 'src\PoshOtel.psm1'
+$PathToModule = Join-Path -Path $ProjectDirectory -ChildPath "bin\PoshOtel.psd1"
 
-. "$PSScriptRoot\secrets.ps1"
+. "$ProjectDirectory\build\secrets.ps1"
 
 Remove-Module 'PoshOtel' -ErrorAction Ignore
-Import-Module $PathToModule
+Import-Module $PathToModule -ErrorAction Stop
 
 if ($null -eq $Global:TestConsumerInitialized) {
     $Global:TestConsumerInitialized = $false
