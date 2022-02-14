@@ -11,6 +11,8 @@ $SrcDirectoryPath = Join-Path -Path $ProjectRootPath -ChildPath 'src' -Resolve
 $ToolsDirectoryPath = Join-Path $ProjectRootPath -ChildPath 'tools' -Resolve
 $BinDirectoryPath = Join-Path -Path $ProjectRootPath -ChildPath 'bin'
 
+Invoke-ScriptAnalyzer -Settings $BuildDirectoryPath\PSScriptAnalyzerSettings.psd1 -Path $SrcDirectoryPath -ReportSummary
+
 $MODULE_GUID = [Guid]::new('2CA13CCF-8751-4D25-9CBF-998727787367')
 
 if (Test-Path "$BuildDirectoryPath\secrets.ps1") {
