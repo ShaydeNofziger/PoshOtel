@@ -64,6 +64,7 @@ $NewModuleManifestSplat = @{
     AliasesToExport = @()
     FileList = $RequiredFiles
     CompatiblePSEditions = @('Desktop', 'Core')
+    PowerShellVersion = '5.1'
 }
 
 Write-Verbose -Message 'Creating module manifest...'
