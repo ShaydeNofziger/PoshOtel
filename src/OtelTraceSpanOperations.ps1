@@ -38,4 +38,40 @@ function New-OtelTraceSpan {
     return $activity
 }
 
-Export-ModuleMember -Function New-OtelTraceSpan, Get-OtelActivitySource
+function Write-OtelTraceSpanEvent {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$EventName,
+
+        [Parameter(Mandatory = $false, ValueFromPipeline = $true)]
+        [System.Diagnostics.Activity] $TargetActivity = [System.Diagnostics.Activity]::Current,
+
+        [Parameter(Mandatory = $false)]
+        [System.DateTimeOffset]$EventTime = [System.DateTimeOffset]::UtcNow,
+
+        [Parameter(Mandatory = $false)]
+        [System.Diagnostics.ActivityTagsCollection] $EventTags = [System.Diagnostics.ActivityTagsCollection]::new()
+    )
+
+    if ($null -eq $TargetActivity) {
+        $PSCmdlet.ThrowTerminatingError(
+            [System.Management.Automation.ErrorRecord]::new(
+                [System.ArgumentNullException]::new(
+                    'TargetActivity',
+                    'No Trace appears to be in progress. If a TargetActivity is not specified, the current Activity is used. Ensure a trace has been started via New-OtelTraceSpan before calling this command.'
+                ),
+                'NoTraceInProgress',
+                [System.Management.Automation.ErrorCategory]::InvalidArgument,
+                $null
+            )
+        )
+    }
+
+    $activityEvent = [System.Diagnostics.ActivityEvent]::new($EventName, $EventTime, $EventTags)
+
+    return $TargetActivity.AddEvent($activityEvent)
+
+}
+
+Export-ModuleMember -Function New-OtelTraceSpan, Get-OtelActivitySource, Write-OtelTraceSpanEvent
