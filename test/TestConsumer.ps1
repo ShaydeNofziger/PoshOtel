@@ -10,7 +10,7 @@ if ($null -eq $Global:TestConsumerInitialized) {
     $Global:TestConsumerInitialized = $false
 }
 if (-not ($Global:TestConsumerInitialized)) {
-    Initialize-PoshOtel -ServiceName 'TestConsumer' -ServiceVersion '0.0.1'
+    Initialize-PoshOtel -ServiceName 'TestConsumer' -ServiceVersion '0.0.1' -AddAzureMonitorTraceExporter
     $Global:TestConsumerInitialized = $true
 }
 

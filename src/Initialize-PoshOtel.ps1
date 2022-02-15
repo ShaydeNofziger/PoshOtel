@@ -1,3 +1,4 @@
+using namespace Azure.Monitor.OpenTelemetry.Exporter;
 using namespace System.Diagnostics
 using namespace OpenTelemetry
 using namespace OpenTelemetry.Trace
@@ -8,13 +9,19 @@ using namespace OpenTelemetry.Exporter.OpenTelemetryProtocol
 # TODO: Is Global scope necessary to maintain the instance and not let it be disposed?
 $Global:PoshOtelTracerProvider = $null
 
-function InternalInitializeOtlpTracerProvider {
+function Initialize-PoshOtel {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory = $true)]
         [string] $ServiceName,
         [Parameter(Mandatory = $true)]
-        [string] $ServiceVersion
+        [string] $ServiceVersion,
+        [Parameter(Mandatory = $false)]
+        [switch] $AddConsoleExporter,
+        [Parameter(Mandatory = $false)]
+        [switch] $AddAzureMonitorTraceExporter,
+        [Parameter(Mandatory = $false)]
+        [switch] $AddGenericOtlpExporter
     )
 
     <#
@@ -29,27 +36,25 @@ function InternalInitializeOtlpTracerProvider {
     $resourceBuilder = [ResourceBuilderExtensions]::AddService($resourceBuilder, $ServiceName, $ServiceVersion)
     $tracerProviderBuilder = [OpenTelemetry.Sdk]::CreateTracerProviderBuilder().AddSource($ServiceName)
     $tracerProviderBuilder = [TracerProviderBuilderExtensions]::SetResourceBuilder($tracerProviderBuilder, $resourceBuilder)
-    # uncomment this line to enable the console exporter
-    # TODO: Add a parameter to enable/disable the console exporter -- DebugPreference??
-    # $tracerProviderBuilder = [ConsoleExporterHelperExtensions]::AddConsoleExporter($tracerProviderBuilder)
 
-    $tracerProviderBuilder = [OtlpTraceExporterHelperExtensions]::AddOtlpExporter($tracerProviderBuilder)
+    if ($AddConsoleExporter) {
+        $tracerProviderBuilder = [ConsoleExporterHelperExtensions]::AddConsoleExporter($tracerProviderBuilder)
+    }
+
+    if ($AddAzureMonitorTraceExporter) {
+        $tracerProviderBuilder = [AzureMonitorExporterHelperExtensions]::AddAzureMonitorTraceExporter($tracerProviderBuilder, [System.Action[Azure.Monitor.OpenTelemetry.Exporter.AzureMonitorExporterOptions]]{
+            param($options)
+            $options.ConnectionString = $env:OTEL_EXPORTER_AZUREMONITOR_CONNECTIONSTRING
+        })
+    }
+
+    if ($AddGenericOtlpExporter) {
+        $tracerProviderBuilder = [OtlpTraceExporterHelperExtensions]::AddOtlpExporter($tracerProviderBuilder)
+    }
 
     # TODO: Add check to ensure we don't register this more than once. ReadOnly variable??
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseDeclaredVarsMoreThanAssignments', '')]
     $Global:PoshOtelTracerProvider = [TracerProviderBuilderExtensions]::Build($tracerProviderBuilder)
-}
-
-function Initialize-PoshOtel {
-    [CmdletBinding()]
-    param(
-        [Parameter(Mandatory = $true)]
-        [string] $ServiceName,
-        [Parameter(Mandatory = $true)]
-        [string] $ServiceVersion
-    )
-
-    InternalInitializeOtlpTracerProvider -ServiceName $ServiceName -ServiceVersion $ServiceVersion
 }
 
 Export-ModuleMember -Function Initialize-PoshOtel
