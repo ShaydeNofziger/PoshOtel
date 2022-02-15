@@ -39,3 +39,21 @@ $null = $traceOperation.Stop()
 $traceOperation.Dispose()
 
 ```
+
+## Troubleshooting
+
+### OpenTelemetry Diagnostics
+
+OTEL Diagnostics logging can be enabled to help troubleshoot issues related to traces not making it to their destination.
+
+Enable it by creating a file named `OTEL_DIAGNOSTICS.json` at the root of this repository with the following contents:
+
+```json
+{
+    "LogDirectory": ".",
+    "FileSize": 1024,
+    "LogLevel": "Error"
+}
+```
+
+Create a new powershell session and import the module from the location of the OTEL_DIAGNOSTICS.json file. This will generate a log file at the path indicated by `LogDirectory`.
