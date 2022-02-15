@@ -1,9 +1,12 @@
 [CmdletBinding()]
 param(
-    [string]$Version = '0.0.1'
+    [string]$Version = '0.0.1',
+    [string]$TargetFramework = 'netstandard2.0'
 )
 
 $ErrorActionPreference = 'Stop'
+
+Remove-Module -Name 'PoshOtel' -Force -ErrorAction Ignore
 
 $ProjectRootPath = Split-Path -Path $PSScriptRoot -Parent -Resolve
 $BuildDirectoryPath = Join-Path -Path $ProjectRootPath -ChildPath 'build' -Resolve
@@ -41,13 +44,17 @@ foreach($RequiredFile in $RequiredFilesList) {
     )
 }
 
-# This grabs all of the DLLs in the bin directory that target netstandard2.0 for load at module-import time.
-$RequiredAssemblyFileList = $RequiredFilesList | Where-Object -Property FullName -Like '*\lib\netstandard2.0\*' |  Where-Object -Property Extension -eq '.dll' | Select-Object -Property Name, FullName, BaseName
+# This grabs all of the DLLs in the bin directory that target $TargetFramework for load at module-import time.
+$RequiredAssemblyFileList = $RequiredFilesList | Where-Object -Property FullName -Like "*\lib\$TargetFramework\*" |  Where-Object -Property Extension -eq '.dll' | Select-Object -Property Name, FullName, BaseName
 $RequiredAssemblies = @()
+New-Item -Path $BinDirectoryPath\lib -Type Directory -Force | Out-Null
 foreach ($RequiredAssemblyFile in $RequiredAssemblyFileList) {
-    $RequiredAssemblies += "packages\$($RequiredAssemblyFile.BaseName)\lib\netstandard2.0\$($RequiredAssemblyFile.Name)"
+    Copy-Item -Path $RequiredAssemblyFile.FullName -Destination $BinDirectoryPath\lib -Force
+    $RequiredAssemblies += "lib\$($RequiredAssemblyFile.Name)"
 }
 
+# This is needed by grpc.core.dll
+Copy-Item -Path $BinDirectoryPath\packages\Grpc.Core\runtimes -Recurse -Destination $BinDirectoryPath\lib -Force
 
 $NewModuleManifestSplat = @{
     Path = "$BinDirectoryPath\PoshOtel.psd1"

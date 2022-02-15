@@ -21,10 +21,15 @@ Here's a very basic trace in Honeycomb:
 Import-Module .\bin\PoshOtel.psd1
 
 # These need to be set prior to calling the Initialize cmdlet
+
+    # For export to a generic OTLP endpoint
     $env:OTEL_EXPORTER_OTLP_ENDPOINT = 'https://api.honeycomb.io:443'
     $env:OTEL_EXPORTER_OTLP_HEADERS = 'x-honeycomb-team=<<API_KEY>>,x-honeycomb-dataset=<<DATASET>>'
     $env:OTEL_EXPORTER_OTLP_TIMEOUT = '600000'
     $env:OTEL_EXPORTER_OTLP_PROTOCOL = 'grpc'
+
+    # For export to an Azure Monitor / Application Insights endpoint
+    $env:OTEL_EXPORTER_AZUREMONITOR_CONNECTIONSTRING = '<<CONNECTION_STRING>>'
     
 
 Initialize-PoshOtel -ServiceName 'TestConsumer' -ServiceVersion '0.0.1'
