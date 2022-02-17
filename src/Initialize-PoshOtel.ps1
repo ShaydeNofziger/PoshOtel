@@ -7,7 +7,7 @@ using namespace OpenTelemetry.Exporter.Console
 using namespace OpenTelemetry.Exporter.OpenTelemetryProtocol
 
 # TODO: Is Global scope necessary to maintain the instance and not let it be disposed?
-$Global:PoshOtelTracerProvider = $null
+[System.Collections.Generic.Dictionary[[string],[OpenTelemetry.Trace.TracerProvider]]]$Global:PoshOtelTracerProviders = [System.Collections.Generic.Dictionary[[string],[OpenTelemetry.Trace.TracerProvider]]]::new()
 
 function Initialize-PoshOtel {
     [CmdletBinding()]
@@ -21,8 +21,28 @@ function Initialize-PoshOtel {
         [Parameter(Mandatory = $false)]
         [switch] $AddAzureMonitorTraceExporter,
         [Parameter(Mandatory = $false)]
-        [switch] $AddGenericOtlpExporter
+        [switch] $AddGenericOtlpExporter,
+        [Parameter(Mandatory = $false)]
+        [switch] $Force
     )
+
+    if ($Global:PoshOtelTracerProviders.ContainsKey("${ServiceName}+${ServiceVersion}")) {
+        if ($Force) {
+            $Global:PoshOtelTracerProviders.Remove("${ServiceName}+${ServiceVersion}")
+        }
+        else {
+            $PSCmdlet.ThrowTerminatingError(
+                [System.Management.Automation.ErrorRecord]::new(
+                    [System.InvalidOperationException]::new(
+                        "Tracer provider already exists for service ${ServiceName}, version ${ServiceVersion}. Use -Force to overwrite."
+                    ),
+                    'TracerProviderAlreadyExists',
+                    [System.Management.Automation.ErrorCategory]::InvalidOperation,
+                    $null
+                )
+            )
+        }
+    }
 
     <#
         Per the OTLP .NET documentation, these values can be configured via environment variables.
@@ -53,8 +73,38 @@ function Initialize-PoshOtel {
     }
 
     # TODO: Add check to ensure we don't register this more than once. ReadOnly variable??
-    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseDeclaredVarsMoreThanAssignments', '')]
-    $Global:PoshOtelTracerProvider = [TracerProviderBuilderExtensions]::Build($tracerProviderBuilder)
+    $Global:PoshOtelTracerProviders.Add("${ServiceName}+${ServiceVersion}", [TracerProviderBuilderExtensions]::Build($tracerProviderBuilder)) | Out-Null
 }
 
-Export-ModuleMember -Function Initialize-PoshOtel
+function Remove-PoshOtelTraceExporter {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true)]
+        [string] $ServiceName,
+
+        [Parameter(Mandatory = $true)]
+        [string] $ServiceVersion
+    )
+
+    begin {
+        $ProviderDictionaryKey = "${ServiceName}+${ServiceVersion}"
+    }
+
+    process {
+        $TracerProvider = $null
+        if ($Global:PoshOtelTracerProviders.TryGetValue($ProviderDictionaryKey, [ref] $TracerProvider)) {
+            Write-Verbose -Message 'Hit It!'
+            $TracerProvider.Dispose()
+            $Global:PoshOtelTracerProviders.Remove($ProviderDictionaryKey) | Out-Null
+        }
+        else {
+            $PSCmdlet.ThrowTerminatingError("Tracer provider does not exist for service ${ServiceName}, version ${ServiceVersion}")
+        }
+    }
+
+    end {
+
+    }
+}
+
+Export-ModuleMember -Function Initialize-PoshOtel, Remove-PoshOtelTraceExporter
