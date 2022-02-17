@@ -2,3 +2,4 @@ nuget.exe
 bin
 secrets.ps1
 OTEL_DIAGNOSTICS.json
+powershell.exe.*.log
