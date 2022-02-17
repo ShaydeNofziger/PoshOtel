@@ -38,6 +38,21 @@ function New-OtelTraceSpan {
     return $activity
 }
 
+function Stop-OtelTraceSpan {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $false)]
+        [System.Diagnostics.Activity] $Activity
+    )
+
+    if ($Activity) {
+        $Activity.Stop()
+    }
+    else {
+        [System.Diagnostics.Activity]::Current.Stop()
+    }
+}
+
 function Write-OtelTraceSpanEvent {
     [CmdletBinding()]
     param(
@@ -74,4 +89,4 @@ function Write-OtelTraceSpanEvent {
 
 }
 
-Export-ModuleMember -Function New-OtelTraceSpan, Get-OtelActivitySource, Write-OtelTraceSpanEvent
+Export-ModuleMember -Function New-OtelTraceSpan, Get-OtelActivitySource, Write-OtelTraceSpanEvent, Stop-OtelTraceSpan
