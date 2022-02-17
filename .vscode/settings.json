@@ -1,3 +1,4 @@
 {
-    "powershell.scriptAnalysis.settingsPath": "build\\PSScriptAnalyzerSettings.psd1"
+    "powershell.scriptAnalysis.settingsPath": "build\\PSScriptAnalyzerSettings.psd1",
+    "files.trimTrailingWhitespace": true
 }
